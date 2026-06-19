@@ -86,7 +86,7 @@ impl LegacyTransactionBuilder {
     pub fn add_input(mut self, input: TxInput) -> Self {
         // TODO: Add input to the transaction
         self.inputs.push(input);
-        self    
+        self
     }
 
     pub fn add_output(mut self, output: TxOutput) -> Self {
@@ -147,9 +147,9 @@ pub fn parse_cli_args(args: &[String]) -> Result<CliCommand, BitcoinError> {
                 ));
             }
 
-            let amount = args[1].parse::<u64>().map_err(|_| {
-                BitcoinError::ParseError("Invalid amount".to_string())
-            })?;
+            let amount = args[1]
+                .parse::<u64>()
+                .map_err(|_| BitcoinError::ParseError("Invalid amount".to_string()))?;
             let address = args[2].clone();
 
             Ok(CliCommand::Send { amount, address })
@@ -171,10 +171,24 @@ pub enum CliCommand {
 impl TryFrom<&[u8]> for LegacyTransaction {
     type Error = BitcoinError;
 
-    fn try_from(_data: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
         // TODO: Parse binary data into a LegacyTransaction
         // Minimum length is 10 bytes (4 version + 4 inputs count + 4 lock_time)
-        todo!()
+        if data.len() < 16 {
+            return Err(BitcoinError::InvalidTransaction);
+        }
+
+        let version = i32::from_le_bytes([data[0], data[1], data[2], data[3]]);
+        let inputs_count = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
+        let outputs_count = u32::from_le_bytes([data[8], data[9], data[10], data[11]]) as usize;
+        let lock_time = u32::from_le_bytes([data[12], data[13], data[14], data[15]]);
+
+        Ok(LegacyTransaction {
+            version,
+            inputs: Vec::with_capacity(inputs_count),
+            outputs: Vec::with_capacity(outputs_count),
+            lock_time,
+        })
     }
 }
 
