@@ -1,4 +1,3 @@
-use std::str::FromStr;
 use thiserror::Error;
 
 // Custom errors for Bitcoin operations
@@ -136,7 +135,31 @@ pub struct OutPoint {
 // Simple CLI argument parser
 pub fn parse_cli_args(args: &[String]) -> Result<CliCommand, BitcoinError> {
     // TODO: Match args to "send" or "balance" commands and parse required arguments
-    todo!()
+    if args.is_empty() {
+        return Err(BitcoinError::ParseError("No command provided".to_string()));
+    }
+
+    match args[0].as_str() {
+        "send" => {
+            if args.len() < 3 {
+                return Err(BitcoinError::ParseError(
+                    "send requires amount and address".to_string(),
+                ));
+            }
+
+            let amount = args[1].parse::<u64>().map_err(|_| {
+                BitcoinError::ParseError("Invalid amount".to_string())
+            })?;
+            let address = args[2].clone();
+
+            Ok(CliCommand::Send { amount, address })
+        }
+        "balance" => Ok(CliCommand::Balance),
+        _ => Err(BitcoinError::ParseError(format!(
+            "Unknown command: {}",
+            args[0]
+        ))),
+    }
 }
 
 pub enum CliCommand {
@@ -148,7 +171,7 @@ pub enum CliCommand {
 impl TryFrom<&[u8]> for LegacyTransaction {
     type Error = BitcoinError;
 
-    fn try_from(data: &[u8]) -> Result<Self, Self::Error> {
+    fn try_from(_data: &[u8]) -> Result<Self, Self::Error> {
         // TODO: Parse binary data into a LegacyTransaction
         // Minimum length is 10 bytes (4 version + 4 inputs count + 4 lock_time)
         todo!()
