@@ -196,6 +196,9 @@ impl TryFrom<&[u8]> for LegacyTransaction {
 impl BitcoinSerialize for LegacyTransaction {
     fn serialize(&self) -> Vec<u8> {
         // TODO: Serialize only version and lock_time (simplified)
-        todo!()
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&self.version.to_le_bytes());
+        bytes.extend_from_slice(&self.lock_time.to_le_bytes());
+        bytes
     }
 }
